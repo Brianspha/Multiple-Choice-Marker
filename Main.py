@@ -584,7 +584,7 @@ def getAnswerforStrip(Img):
         #if nonBlack ==0 non answer
         x=[]
         isCorrect=[]
-        if nonBlack == None:
+        if nonBlack is None:
             return isCorrect
         for item in nonBlack:
           x.append(item[0][0])
@@ -612,7 +612,7 @@ def getParts(file):
         box=getInnerRec(file)
         h,w=box.shape
         #print(h,w)
-        cv2.imwrite("extracted.png",box)
+        #cv2.imwrite("extracted.png",box)
         #cv2.imwrite("box.png",box)
         box,part6=getSegmant(box,6)
         print("box6 shape",part6.shape)
@@ -639,16 +639,24 @@ def getParts(file):
         #cv2.imwrite("box1.png",box)
         cv2.imwrite("part1.png",part1)
         return [part1,part2,part3,part4,part5,part6]
+def saveStrips(left,right,file):
+    lenght =len(left)
+    for index in range(lenght):
+        cv2.imwrite(str(index)+file,left[index])
+        cv2.imwrite(str(index)+file,left[index])
 def markSheets():
     files =filterFolder("ConvertedPages")
     answers=[]
-    leftQuestionCount=1
-    rightQuestionCount=1
+    
     for file in files:
         Parts=getParts(file)
+        leftQuestionCount=1
+        rightQuestionCount=1
         for part in Parts:
             segmentLeft =getRowQuestion(part,True)
             segmentRight =getRowQuestion(part,False)
+            saveStrips(segmentLeft,segmentRight,file)
+            print(segmentLeft)
             for question in segmentLeft:
                 ans=getAnswerforStrip(question)
                 answers.append((leftQuestionCount,ans))
@@ -657,6 +665,7 @@ def markSheets():
                 ans =getAnswerforStrip(question)
                 answers.append((rightQuestionCount,ans))
                 rightQuestionCount+=1
+        break
     return answers
 thisdir = os.getcwd()
 pdFfile =join(thisdir,"MCQ2016.pdf")
