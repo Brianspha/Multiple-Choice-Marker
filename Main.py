@@ -51,19 +51,7 @@ def filterFolder(directoryName):
         _,ext = split
         if isfile(cur) and ext==".png" :
             onlyfiles.append(f)
-    return onlyfiles
-#@dev converts bytes to int
-#@param bytes- to be converted    
-def bytes_to_int(bytes):
-    result = 0
-    for b in bytes:
-        result = result * 256 + int(b)
-    return result
-#@dev removes b's from given number
-def byteTostring(string):
-    string=string.decode("utf-8")
-    ######print("string", string)
-    return  string  
+    return onlyfiles     
 def rotate_image(file, angle):
     """
     Rotates an image (angle in degrees) and expands image to avoid cropping
@@ -201,41 +189,6 @@ def getCorners():
             blank=gray[yMin:yMax,xMin:xMax]
             #blank=cv2.Canny(blank,127,200)
             cv2.imwrite(file,blank)
-def extractCorners(toFix=[]):
-    index=1
-    files=filterFolder("ConvertedPages")
-    toFix=[]
-    for file in files:
-        file = join("ConvertedPages",file)
-        ######print("File",file)
-        imgFile=cv2.imread(file,1)
-        gray = cv2.cvtColor(imgFile, cv2.COLOR_BGR2GRAY)
-        height,width=gray.shape
-        blank_image = np.zeros((height,width,3), np.uint8)
-        ret,thresh = cv2.threshold(gray,127,255,cv2.THRESH_OTSU)
-        kernel = np.ones((3, 3), np.uint8)
-        closing = cv2.morphologyEx(thresh, cv2.MORPH_ERODE,kernel, iterations=9)
-        erode = cv2.morphologyEx(closing, cv2.MORPH_CLOSE,kernel, iterations=15)
-        cv2.imwrite(file,erode)
-        contours,h = cv2.findContours(erode,1,2)
-        ######print(len(contours))
-        squares=[] 
-        for cnt in contours:
-            approx = cv2.approxPolyDP(cnt,0.01*cv2.arcLength(cnt,True),True)
-            area =cv2.contourArea(cnt)
-            t=cv2.arcLength(cnt,True)
-            #####print ("approx",len(approx))
-            if area> 200 and area <2100:
-                x, y, width, height = cv2.boundingRect(approx)
-                aspectRatio = float(width) / height
-                ######print("Here")
-                # a square will have an aspect ratio that is approximately
-                # equal to one, otherwise, the shape is a rectangle
-                hull = cv2.convexHull(cnt)
-                squares.append(hull)
-                cv2.drawContours(blank_image,[hull],0,(255,255,255),-1)
-                squares.append([cnt,x,y])
-        cv2.imwrite(file,blank_image)
 def extractInnerRectangle(file):
         file = join("ConvertedPages",file)
         ######print("File",file)
@@ -334,49 +287,6 @@ def extractCorner(file,pdFfile,namingConvention):
             cv2.drawContours(blank_image,[hull],0,(255,255,255),-1)
             squares.append([cnt,x,y])
     cv2.imwrite(file,blank_image)# Getting the current work directory (cwd)
-def extractPagesfromPDF(pages):
-    files =filterFolder("ConvertedPages")
-    # getting length of list of tuples 
-    lst = len(tup)  
-    for i in range(0, lst):  
-          
-        for j in range(0, lst-i-1):  
-            if (tup[j][by] > tup[j + 1][by]):  
-                temp = tup[j]  
-                tup[j]= tup[j + 1]  
-                tup[j + 1]= temp  
-    return tup  
-def calculateAngleMinor(toFix=[]):
-    files=filterFolder("ConvertedPages")
-    cantMark=[]
-    points=[]
-    #XY=[]
-    correct=[]
-    incorrect=[]
-    for file in files:
-        if file in toFix:
-            ###print("Skipping")
-            continue
-        file=join("ConvertedPages",file)
-        imgfile=cv2.imread(file)
-        gray =cv2.imread(file,0)
-        coords = np.column_stack(np.where(gray > 0))
-        angle = cv2.minAreaRect(coords)[-1]
-        if angle < -45:
-            angle = -(90 + angle)
-        # otherwise, just take the inverse of the angle to make
-        # it positive
-        else:
-            angle = -angle
-        # rotate the image to deskew it
-        (h, w) = imgfile.shape[:2]
-        center = (w // 2, h // 2)
-        M = cv2.getRotationMatrix2D(center, angle, 1.0)
-        rotated = cv2.warpAffine(imgfile, M, (w, h),
-        flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
-        cv2.imwrite(file,imgfile)
-        #print("angle for file",file,angle)
-    ###print("Correct files: ",len(correct),"\n \n","Incorrect files: ",len(incorrect))
 def createBlankImage(width,height):
     return np.zeros((height,width,3), np.uint8)
 def drawLine(x,y,x1,y1,imgfile,iterations=1):
@@ -543,18 +453,16 @@ def removeExtraWhiteSpaceTop():
         cv2.imwrite(file,img)
 def getRowQuestion(image,left):
         side=getIndividualSegment(image,left)
-        ret,thresh=cv2.threshold(side,127,255,cv2.THRESH_OTSU)
+        blur = cv2.GaussianBlur(side,(5,5),0)
+        ret,thresh=cv2.threshold(blur,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
         #edges=cv2.Canny(thresh,127,200)
-        closing=cv2.morphologyEx(thresh,cv2.MORPH_CLOSE,(5,5),iterations=5)
-        dialted=cv2.dilate(closing,(5,5),iterations=17)
-        erode=cv2.morphologyEx(dialted,cv2.MORPH_ERODE,(15,15),iterations=2)
-        erode=cv2.bitwise_not(erode)
-        h,w=side.shape
+        closing=cv2.morphologyEx(thresh,cv2.MORPH_CLOSE,(3,3),iterations=5)
+        h,w=closing.shape
         xmin = 31
         ymin=64
         print(w,h)
         w=w-int(w*.04)
-        closing=erode[ymin:h,xmin:w]
+        closing=closing[ymin:h,xmin:w]
         original=closing
         h,w=closing.shape
         innerroYmax=int(h/5)
@@ -577,115 +485,152 @@ def getRowQuestion(image,left):
         cv2.imwrite("part4Q.png",part4)
         cv2.imwrite("part5Q.png",part5)
 
-        return [part1,part2,part3,part4,part5]
-def getAnswerforStrip(Img):
-        nonBlack=cv2.findNonZero(Img)
-        #print(len(nonBlack))
-        #if nonBlack ==0 non answer
-        x=[]
-        isCorrect=[]
-        if nonBlack is None:
-            return isCorrect
-        for item in nonBlack:
-          x.append(item[0][0])
-        x=sorted(x)
-        h,w=Img.shape
-        ansPos=[(0,32,"A"),(32,68,"B"),(68,99,"C"),(99,131,"D"),(131,w,"D")]
-        x=x[-5:]
-        
-        for num in x:
-         for ans in ansPos:
-            minX=ans[0]
-            maxX=ans[1]
-            ansAlph=ans[2]
-            if  num>minX and num<maxX:
-                if ansAlph not in isCorrect:
-                        isCorrect.append(ansAlph)
-        if len(isCorrect)>2:
-             print(isCorrect,"invalid question")
-        else:
-                print("accepted answers",isCorrect)
-        return isCorrect    
+        return [part1,part2,part3,part4,part5] 
+def getCircles(img):
+        h,w=img.shape
+        startX=10
+        endX=163
+        img=img[0:h,startX:endX]
+        img,circle1=getSegmantW(img,5)
+        cv2.imwrite("circle1.png",circle1)
+        img,circle2=getSegmantW(img,4)
+        cv2.imwrite("circle2.png",circle2)
+        img,circle3=getSegmantW(img,3)
+        cv2.imwrite("circle3.png",circle3)
+        img,circle4=getSegmantW(img,2)
+        cv2.imwrite("circle4.png",circle4)
+        img,circle5=getSegmantW(img,1)
+        cv2.imwrite("circle5.png",circle5)
+        return [circle5,circle4,circle3,circle2,circle1]
+def getAnswersForStrip(img):
+        circles =getCircles(img)
+        ans=[]
+        chrs=["A","B","C","D","E"]
+        for i,currentCircle in enumerate(circles):
+                inverted=cv2.bitwise_not(currentCircle)
+        cv2.imwrite("invCircle"+str(i)+".png",inverted)
+        nonZero=cv2.countNonZero(inverted)
+        print("invCircle"+str(i)+".png","Nonzero",nonZero,i)
+        if nonZero <650:
+            ans.append((chrs[i]))
+        return ans
 def getParts(file):
         file=join("ConvertedPages",file)
-        #print(file)
+        ###print(file)
         box=getInnerRec(file)
         h,w=box.shape
-        #print(h,w)
+        ###print(h,w)
         #cv2.imwrite("extracted.png",box)
         #cv2.imwrite("box.png",box)
         box,part6=getSegmant(box,6)
-        print("box6 shape",part6.shape)
+        ##print("box6 shape",part6.shape)
         cv2.imwrite("remain6.png",box)
         cv2.imwrite("part6.png",part6)
         box,part5=getSegmant(box,5)
-        print("box5 shape",part5.shape)
+        ##print("box5 shape",part5.shape)
         cv2.imwrite("remain5.png",box)
         cv2.imwrite("part5.png",part5)
         box,part4=getSegmant(box,4)
-        print("box4 shape",part4.shape)
+        ##print("box4 shape",part4.shape)
         cv2.imwrite("remain4.png",box)
         cv2.imwrite("part4.png",part4)
         box,part3=getSegmant(box,3)
-        print("box3 shape",part3.shape)
+        ##print("box3 shape",part3.shape)
         cv2.imwrite("remain3.png",box)
         cv2.imwrite("part3.png",part3)
         box,part2=getSegmant(box,2)
-        print("box2 shape",part2.shape)
+        ##print("box2 shape",part2.shape)
         cv2.imwrite("remain2.png",box)
         cv2.imwrite("part2.png",part2)
         box,part1=getSegmant(box,1)
-        print("box1",part1.shape)
+        ##print("box1",part1.shape)
         #cv2.imwrite("box1.png",box)
         cv2.imwrite("part1.png",part1)
         return [part1,part2,part3,part4,part5,part6]
-def saveStrips(left,right,file):
-    lenght =len(left)
-    for index in range(lenght):
-        cv2.imwrite(str(index)+file,left[index])
-        cv2.imwrite(str(index)+file,left[index])
-def markSheets():
+def markSheets(file=None):
     files =filterFolder("ConvertedPages")
     answers=[]
-    
-    for file in files:
+    sheetNumber=1
+    if file is None:
+        for file in files:
+            Parts=getParts(file)
+            leftQuestionCount=1
+            rightQuestionCount=31
+            for part in Parts:
+                segmentLeft =getRowQuestion(part,True)
+                segmentRight =getRowQuestion(part,False)
+                saveStrips(segmentLeft,segmentRight,file)
+                for question in segmentLeft:
+                    ans=getAnswersForStrip(question)
+                    answers.append((leftQuestionCount,ans))
+                    leftQuestionCount+=1
+                for question in segmentRight:
+                    ans =getAnswersForStrip(question)
+                    answers.append((rightQuestionCount,ans))
+                    rightQuestionCount+=1
+            writeToFile(answers,sheetNumber)
+            #sheetNumber+=1
+            break
+    else:
         Parts=getParts(file)
         leftQuestionCount=1
-        rightQuestionCount=1
+        rightQuestionCount=31
         for part in Parts:
             segmentLeft =getRowQuestion(part,True)
             segmentRight =getRowQuestion(part,False)
             saveStrips(segmentLeft,segmentRight,file)
-            print(segmentLeft)
-            for question in segmentLeft:
-                ans=getAnswerforStrip(question)
-                answers.append((leftQuestionCount,ans))
-                leftQuestionCount+=1
-            for question in segmentRight:
-                ans =getAnswerforStrip(question)
-                answers.append((rightQuestionCount,ans))
-                rightQuestionCount+=1
-        break
-    return answers
+            ans=getAnswersForStrip(segmentLeft[0])
+            print(ans)
+def writeToFile(answers,sheet):
+    answers=sorted(answers,key=lambda x:x[0])
+    file=join("Results","results"+str(sheet)+".csv")
+    csv=""
+    answerArr=[]
+    if not os.path.exists("Results"):
+        os.makedirs("Results")
+        csv=open(file,"w")
+        for num in range(1,61):
+            #csv.write(str(num))
+            answerArr.append((num,[]))
+    else:
+        csv=open(file,"a")
+        csv.write("\n")
+    for answer in answers:
+        print(answer)
+        index=1
+        for ans in answer[1]:
+            #csv.write(ans)
+            idx=0
+            for answr in answerArr:
+                num,ansarr=answr
+                if num == ans[0]:
+                        ansarr.append(num)
+                        answerArr[index]=(num,ansarr)
+                idx+=1
+    length=len(answers)
+    index=0
+    for ans in answers:
+        if index <length:
+            qno,alpharr=ans
+            print(qno,alpharr)
+            csv.write(str(qno))
+            for alph in alpharr:
+                csv.write(alph)
+                csv.write(",")
+
+    csv.close()
+def saveStrips(left,right,file):
+    lenght =len(left)
+    for index in range(lenght):
+        cv2.imwrite(str(index)+"stripleft"+file,left[index])
+        cv2.imwrite(str(index)+"stripRight"+file,right[index])
+
 thisdir = os.getcwd()
 pdFfile =join(thisdir,"MCQ2016.pdf")
 naming="MCQ2016"
 convertPdfToImages(pdFfile,naming,"ConvertedPages")
-#toFix=verifyImageContours()
-#extractCorners(pdFfile)
-#points =calculateAngleMinor(toFix)
-#calculateAngleMajor(toFix)
-####print("fix the ffg",toFix)
-#file = ("MCQ60020162.png")
-#extractInnerRectangle(file)
-#imgFile=cv2.imread(file,1)
 rotateFiles(pdFfile,naming)
-#extractInnerRectangles()
-#extractInnerRectangles()
 getCorners()
-#calculateAngleMinor()
 removeExtraWhiteSpaceTop()
-calculateAngleMinor()
-marks=markSheets()
-print("answers for sheet",marks)
-
+file=join("MCQ20163.png")
+markSheets(file)

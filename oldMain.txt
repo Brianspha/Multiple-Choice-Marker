@@ -19,7 +19,7 @@ from copy import copy, deepcopy
 #@param directory directory to which the converted pdf pages are to be stored
 def convertPdfToImages(pdfFile,outputname,directory,rotating=False,toRotate=[]):
     pages = convert_from_path(pdfFile,200)
-    #####print("Opening File: ",pdfFile)
+    #######print("Opening File: ",pdfFile)
     index=1 
     if not os.path.exists(directory):
             os.makedirs(directory)
@@ -32,11 +32,11 @@ def convertPdfToImages(pdfFile,outputname,directory,rotating=False,toRotate=[]):
     else:
             for page in pages:
                 name=outputname+str(index)+".png"
-                ###print(toRotate)
+                #####print(toRotate)
                 newfile=join(directory,name)
                 index+=1
                 if name in toRotate:
-                    ###print("rotating",newfile)
+                    #####print("rotating",newfile)
                     page.save(newfile,'PNG')
                     cv2.imwrite(newfile,rotate_image(newfile,180))
                 else:
@@ -62,7 +62,7 @@ def bytes_to_int(bytes):
 #@dev removes b's from given number
 def byteTostring(string):
     string=string.decode("utf-8")
-    ######print("string", string)
+    ########print("string", string)
     return  string  
 def rotate_image(file, angle):
     """
@@ -104,7 +104,7 @@ def extractInnerRectangles():
     toFix=[]
     for file in files:
         file = join("ConvertedPages",file)
-        #####print("File",file)
+        #######print("File",file)
         imgFile=cv2.imread(file,1)
         gray = cv2.cvtColor(imgFile, cv2.COLOR_BGR2GRAY)
         #ret,thresh = cv2.threshold(gray,127,255,cv2.THRESH_OTSU)
@@ -124,7 +124,7 @@ def extractInnerRectangles():
                 
                 area =cv2.contourArea(approx)
                 if area >70000:
-                    ##print("area",area,"pagearea",pageArea,file)
+                    ####print("area",area,"pagearea",pageArea,file)
                     x, y, width, height = cv2.boundingRect(approx)
                     aspectRatio = float(width) / height
                     # a square will have an aspect ratio that is approximately
@@ -174,14 +174,14 @@ def getCorners():
             criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 0.001)
             corners = cv2.cornerSubPix(dialted,np.float32(centroids),(5,5),(-1,-1),criteria)
             blank=createBlankImage(erode.shape[1],erode.shape[0])
-            ###print("cont len",len(corners),file)
+            #####print("cont len",len(corners),file)
             x=[]
             y=[]
             #sorted(corners)
             for corner in corners:
                     x.append(corner[0])
                     y.append(corner[1])
-                    ##print(corner)
+                    ####print(corner)
             x=sorted(x)
             y=sorted(y)
             x=np.array(x).astype(int)
@@ -196,8 +196,8 @@ def getCorners():
                 yMin=170
             if yMax >=1590 and yMax< 1640:
                 yMax=1605
-            ###print(corners)
-            #print(xMin,yMin,xMax,yMax,file)
+            #####print(corners)
+            ###print(xMin,yMin,xMax,yMax,file)
             blank=gray[yMin:yMax,xMin:xMax]
             #blank=cv2.Canny(blank,127,200)
             cv2.imwrite(file,blank)
@@ -207,7 +207,7 @@ def extractCorners(toFix=[]):
     toFix=[]
     for file in files:
         file = join("ConvertedPages",file)
-        ######print("File",file)
+        ########print("File",file)
         imgFile=cv2.imread(file,1)
         gray = cv2.cvtColor(imgFile, cv2.COLOR_BGR2GRAY)
         height,width=gray.shape
@@ -218,17 +218,17 @@ def extractCorners(toFix=[]):
         erode = cv2.morphologyEx(closing, cv2.MORPH_CLOSE,kernel, iterations=15)
         cv2.imwrite(file,erode)
         contours,h = cv2.findContours(erode,1,2)
-        ######print(len(contours))
+        ########print(len(contours))
         squares=[] 
         for cnt in contours:
             approx = cv2.approxPolyDP(cnt,0.01*cv2.arcLength(cnt,True),True)
             area =cv2.contourArea(cnt)
             t=cv2.arcLength(cnt,True)
-            #####print ("approx",len(approx))
+            #######print ("approx",len(approx))
             if area> 200 and area <2100:
                 x, y, width, height = cv2.boundingRect(approx)
                 aspectRatio = float(width) / height
-                ######print("Here")
+                ########print("Here")
                 # a square will have an aspect ratio that is approximately
                 # equal to one, otherwise, the shape is a rectangle
                 hull = cv2.convexHull(cnt)
@@ -238,7 +238,7 @@ def extractCorners(toFix=[]):
         cv2.imwrite(file,blank_image)
 def extractInnerRectangle(file):
         file = join("ConvertedPages",file)
-        ######print("File",file)
+        ########print("File",file)
         imgFile=cv2.imread(file,1)
         gray = cv2.cvtColor(imgFile, cv2.COLOR_BGR2GRAY)
         ret,thresh = cv2.threshold(gray,127,255,cv2.THRESH_OTSU)
@@ -246,7 +246,7 @@ def extractInnerRectangle(file):
         squares=[] 
         for cnt in contours:
             approx = cv2.approxPolyDP(cnt,0.01*cv2.arcLength(cnt,True),True)
-            ######print (len(approx))
+            ########print (len(approx))
             if len(approx)==4:
                 x, y, width, height = cv2.boundingRect(approx)
                 aspectRatio = float(width) / height
@@ -260,9 +260,9 @@ def extractInnerRectangle(file):
                     squares.append(hull)
                     cv2.drawContours(imgFile,[hull],0,(255,255,255),-1)
             
-                ######print ("square")
-        ######print("Found squres: ",shape)
-        ###print(len(squares),"squares")
+                ########print ("square")
+        ########print("Found squres: ",shape)
+        #####print(len(squares),"squares")
         sort=sorted(squares, key=lambda x: cv2.contourArea(x))
         last4=[]
         for i in range(len(sort)-5,len(sort)-3):
@@ -276,7 +276,7 @@ def extractInnerRectangle(file):
         grey = cv2.cvtColor(grey, cv2.COLOR_BGR2GRAY)
         ret,thresh = cv2.threshold(grey,127,255,cv2.THRESH_OTSU)
         contours,h = cv2.findContours(thresh,1,2)
-        ######print("Found conts: ",len(contours))
+        ########print("Found conts: ",len(contours))
         height, width = imgFile.shape[:2]
         blank_image = np.zeros((imgFile.shape[0],width,3), np.uint8)
         length =len(contours)
@@ -293,20 +293,20 @@ def extractInnerRectangle(file):
         grey = cv2.GaussianBlur(imgFile, (3,3), 0)
         ret,thresh = cv2.threshold(grey,127,255,cv2.THRESH_OTSU)
         contours,h = cv2.findContours(thresh,1,2)
-        #####print(len(contours),"found")
+        #######print(len(contours),"found")
 def extractCorner(file,pdFfile,namingConvention):
     index=1
     pages = convert_from_path(pdFfile,200)
     index=1
     for page in pages:
         name=namingConvention+str(index)+".png"
-        #####print("name",name,"File",file)
+        #######print("name",name,"File",file)
         if name in file: 
             file = join("ConvertedPages",file)
             page.save(file,'PNG')
-            #####print("Found",name)
+            #######print("Found",name)
         index+=1
-    #####print("File",file)
+    #######print("File",file)
     imgFile=cv2.imread(file,1)
     gray = cv2.cvtColor(imgFile, cv2.COLOR_BGR2GRAY)
     height,width=gray.shape
@@ -317,16 +317,16 @@ def extractCorner(file,pdFfile,namingConvention):
     erode = cv2.morphologyEx(closing, cv2.MORPH_CLOSE,kernel, iterations=15)
     cv2.imwrite(file,erode)
     contours,h = cv2.findContours(erode,1,2)
-    ######print(len(contours))
+    ########print(len(contours))
     squares=[] 
     for cnt in contours:
         approx = cv2.approxPolyDP(cnt,0.01*cv2.arcLength(cnt,True),True)
         area =cv2.contourArea(cnt)
         t=cv2.arcLength(cnt,True)
-        #####print ("approx",len(approx))
+        #######print ("approx",len(approx))
         if area> 200 and area <2500:
             x, y, width, height = cv2.boundingRect(approx)
-            ######print("Here")
+            ########print("Here")
             # a square will have an aspect ratio that is approximately
             # equal to one, otherwise, the shape is a rectangle
             hull = cv2.convexHull(cnt)
@@ -355,7 +355,7 @@ def calculateAngleMinor(toFix=[]):
     incorrect=[]
     for file in files:
         if file in toFix:
-            ###print("Skipping")
+            #####print("Skipping")
             continue
         file=join("ConvertedPages",file)
         imgfile=cv2.imread(file)
@@ -375,8 +375,8 @@ def calculateAngleMinor(toFix=[]):
         rotated = cv2.warpAffine(imgfile, M, (w, h),
         flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
         cv2.imwrite(file,imgfile)
-        #print("angle for file",file,angle)
-    ###print("Correct files: ",len(correct),"\n \n","Incorrect files: ",len(incorrect))
+        ###print("angle for file",file,angle)
+    #####print("Correct files: ",len(correct),"\n \n","Incorrect files: ",len(incorrect))
 def createBlankImage(width,height):
     return np.zeros((height,width,3), np.uint8)
 def drawLine(x,y,x1,y1,imgfile,iterations=1):
@@ -395,10 +395,10 @@ def calculateAngleMajor(toFix):
         incorrect=[]
         X=[]
         Y=[]
-        ####print("lenfiles",(files))
+        ######print("lenfiles",(files))
         for file in files:
             if file in toFix:
-                ###print("Skipping")
+                #####print("Skipping")
                 continue
             file=join("ConvertedPages",file)
             imgfile=cv2.imread(file,0)
@@ -407,16 +407,16 @@ def calculateAngleMajor(toFix):
             for contour in conts:
                 approx = cv2.approxPolyDP(contour,0.01*cv2.arcLength(contour,True),True)
                 x, y, width, height = cv2.boundingRect(approx)
-                #####print("Found x and y",x,y)
+                #######print("Found x and y",x,y)
                 points.append((contour,(x,y)))
-                ####print("conlen",len(contour))
+                ######print("conlen",len(contour))
                 #XY.append((x,y))
                 X.append(x)
                 Y.append(y)
             #cls
-            # ###print("Before",XY)
+            # #####print("Before",XY)
             #XY=Sort_Tuple(XY,0)
-            ####print("sorted",XY,"Current File",file,"\n \n \n")
+            ######print("sorted",XY,"Current File",file,"\n \n \n")
             Xmin=min(X)
             Ymin=min(Y)
             Xmax=max(X)
@@ -425,7 +425,7 @@ def calculateAngleMajor(toFix):
             imgfile=drawLine(Xmin,Ymin,Xmax,Ymax,imgfile,1)
             radAngle=math.atan2(Xmax-Xmin,Ymax-Ymin)
             angle = math.degrees(radAngle)
-            ###print("angle for file",file,angle,"\n \n")
+            #####print("angle for file",file,angle,"\n \n")
             cv2.imwrite(file,imgfile)
             if angle <37:
                 incorrect.append(file)
@@ -446,26 +446,26 @@ def rotateFiles(pdfFile,namingConvention):
         centerX=int(width/2)
         centerY=int(height/2)
         #imgfile=imgfile[centerX,centerY]
-        ###print("centerX","cY",centerX,centerY)
+        #####print("centerX","cY",centerX,centerY)
         test=cv2.findNonZero(imgfile)
-        ###print(len(test),"file",file)
+        #####print(len(test),"file",file)
         blank=createBlankImage(width,height)
         centerY2=centerY/2
         centerX2=centerX/2
         for point in test:
-            ####print(point)
+            ######print(point)
             point=point[0]
             x,y=point
             if x>=centerX and y>= centerY2:
                 if file.split("\\")[1] not in toRotate:
                     toRotate.append(file.split("\\")[1])
-    ##print(toRotate)
+    ####print(toRotate)
     convertPdfToImages(pdfFile,namingConvention,"ConvertedPages",True,toRotate)
 def getInnerRec(file):
         imgfile =cv2.imread(file)
         imgGray=cv2.cvtColor(imgfile,cv2.COLOR_BGR2GRAY)
         h,w=imgGray.shape
-        ###print(h,w)
+        #####print(h,w)
         startX=int(w*.4)
         startY=int(h*.004)
         EndX=int(w-w*.10)
@@ -475,12 +475,12 @@ def getInnerRec(file):
 def getSegmant(box, parts,isOne=True):
             h,w=box.shape
             EndY=round(h/parts)
-            ##print("EndY",EndY)
+            ####print("EndY",EndY)
             EndY=h-EndY
-            ##print("h-EndY",EndY)
+            ####print("h-EndY",EndY)
             origin=box
             box=box[0:EndY,0:w]
-            ##print(box.shape)
+            ####print(box.shape)
             origin=origin[EndY:h,0:w]
             return (box,origin)
 def getIndividualSegment(box,left):
@@ -497,12 +497,12 @@ def getIndividualSegment(box,left):
 def getSegmantW(img,parts):
             h,w=img.shape
             EndX=round(w/parts)
-            ##print("EndX",EndX)
+            ####print("EndX",EndX)
             EndX=w-EndX
-            ##print("h-EndX",EndX)
+            ####print("h-EndX",EndX)
             origin=img
             img=img[0:h,0:EndX]
-            ##print(img.shape)
+            ####print(img.shape)
             origin=origin[0:h,EndX:w]
             return (img,origin)
 def removeExtraWhiteSpaceTop():
@@ -525,14 +525,14 @@ def removeExtraWhiteSpaceTop():
         for c in cnts:
             approx = cv2.approxPolyDP(c,0.01*cv2.arcLength(c,True),True)
             x, y, width, height = cv2.boundingRect(approx)
-            ##print(x,y,file)
+            ####print(x,y,file)
             xarr.append(x)
             yarr.append(y)
             # if the contour is bad, draw it on the mask
             #if is_contour_bad(c):
         xarr=sorted(xarr)
         yarr=sorted(i for i in yarr if i>=43)
-        ##print(xarr,"\n",yarr,"\n")    
+        ####print(xarr,"\n",yarr,"\n")    
         minx=min(xarr)
         miny=min(yarr)
         maxx=max(xarr)
@@ -552,7 +552,7 @@ def getRowQuestion(image,left):
         h,w=side.shape
         xmin = 31
         ymin=64
-        print(w,h)
+        ##print(w,h)
         w=w-int(w*.04)
         closing=erode[ymin:h,xmin:w]
         original=closing
@@ -560,16 +560,16 @@ def getRowQuestion(image,left):
         innerroYmax=int(h/5)
         part1=closing[0:innerroYmax,0:w]
         h,w=part1.shape
-        print(h,h+innerroYmax,w)
+        ##print(h,h+innerroYmax,w)
         part2=original[h:h+innerroYmax,0:w]
         h,w=part2.shape
-        print(h,h+innerroYmax,w)
+        ##print(h,h+innerroYmax,w)
         part3=original[h:h+innerroYmax,0:w]
         h,w=part3.shape
-        print(h,h+innerroYmax,w)
+        ##print(h,h+innerroYmax,w)
         part4=original[h:h+innerroYmax,0:w]
         h,w=part4.shape
-        print(h,h+innerroYmax,w)
+        ##print(h,h+innerroYmax,w)
         part5=original[h:h+innerroYmax,0:w]
         cv2.imwrite("part1Q.png",part1)
         cv2.imwrite("part2Q.png",part2)
@@ -580,11 +580,11 @@ def getRowQuestion(image,left):
         return [part1,part2,part3,part4,part5]
 def getAnswerforStrip(Img):
         nonBlack=cv2.findNonZero(Img)
-        #print(len(nonBlack))
+        ###print(len(nonBlack))
         #if nonBlack ==0 non answer
         x=[]
         isCorrect=[]
-        if nonBlack == None:
+        if nonBlack is None:
             return isCorrect
         for item in nonBlack:
           x.append(item[0][0])
@@ -608,56 +608,80 @@ def getAnswerforStrip(Img):
         return isCorrect    
 def getParts(file):
         file=join("ConvertedPages",file)
-        #print(file)
+        ###print(file)
         box=getInnerRec(file)
         h,w=box.shape
-        #print(h,w)
-        cv2.imwrite("extracted.png",box)
+        ###print(h,w)
+        #cv2.imwrite("extracted.png",box)
         #cv2.imwrite("box.png",box)
         box,part6=getSegmant(box,6)
-        print("box6 shape",part6.shape)
+        ##print("box6 shape",part6.shape)
         cv2.imwrite("remain6.png",box)
         cv2.imwrite("part6.png",part6)
         box,part5=getSegmant(box,5)
-        print("box5 shape",part5.shape)
+        ##print("box5 shape",part5.shape)
         cv2.imwrite("remain5.png",box)
         cv2.imwrite("part5.png",part5)
         box,part4=getSegmant(box,4)
-        print("box4 shape",part4.shape)
+        ##print("box4 shape",part4.shape)
         cv2.imwrite("remain4.png",box)
         cv2.imwrite("part4.png",part4)
         box,part3=getSegmant(box,3)
-        print("box3 shape",part3.shape)
+        ##print("box3 shape",part3.shape)
         cv2.imwrite("remain3.png",box)
         cv2.imwrite("part3.png",part3)
         box,part2=getSegmant(box,2)
-        print("box2 shape",part2.shape)
+        ##print("box2 shape",part2.shape)
         cv2.imwrite("remain2.png",box)
         cv2.imwrite("part2.png",part2)
         box,part1=getSegmant(box,1)
-        print("box1",part1.shape)
+        ##print("box1",part1.shape)
         #cv2.imwrite("box1.png",box)
         cv2.imwrite("part1.png",part1)
         return [part1,part2,part3,part4,part5,part6]
+def saveStrips(left,right,file):
+    lenght =len(left)
+    for index in range(lenght):
+        cv2.imwrite(str(index)+file,left[index])
+        cv2.imwrite(str(index)+file,left[index])
 def markSheets():
     files =filterFolder("ConvertedPages")
     answers=[]
-    leftQuestionCount=1
-    rightQuestionCount=1
+    sheetNumber=1
     for file in files:
         Parts=getParts(file)
+        leftQuestionCount=1
+        rightQuestionCount=31
         for part in Parts:
             segmentLeft =getRowQuestion(part,True)
             segmentRight =getRowQuestion(part,False)
             for question in segmentLeft:
-                ans=getAnswerforStrip(question)
+                ans=getAnswersForStrip(question)
                 answers.append((leftQuestionCount,ans))
                 leftQuestionCount+=1
             for question in segmentRight:
-                ans =getAnswerforStrip(question)
+                ans =getAnswersForStrip(question)
                 answers.append((rightQuestionCount,ans))
                 rightQuestionCount+=1
+        break
     return answers
+def getCircles(img):
+        h,w=img.shape
+        startX=10
+        endX=163
+        img=img[0:h,startX:endX]
+        img,circle1=getSegmantW(img,5)
+        cv2.imwrite("circle1.png",circle1)
+        img,circle2=getSegmantW(img,4)
+        cv2.imwrite("circle2.png",circle2)
+        img,circle3=getSegmantW(img,3)
+        cv2.imwrite("circle3.png",circle3)
+        img,circle4=getSegmantW(img,2)
+        cv2.imwrite("circle4.png",circle4)
+        img,circle5=getSegmantW(img,1)
+        cv2.imwrite("circle5.png",circle5)
+        return [circle1,circle2,circle3,circle4,circle5]
+
 thisdir = os.getcwd()
 pdFfile =join(thisdir,"MCQ2016.pdf")
 naming="MCQ2016"
@@ -666,7 +690,7 @@ convertPdfToImages(pdFfile,naming,"ConvertedPages")
 #extractCorners(pdFfile)
 #points =calculateAngleMinor(toFix)
 #calculateAngleMajor(toFix)
-####print("fix the ffg",toFix)
+######print("fix the ffg",toFix)
 #file = ("MCQ60020162.png")
 #extractInnerRectangle(file)
 #imgFile=cv2.imread(file,1)
