@@ -289,10 +289,6 @@ def extractCorner(file,pdFfile,namingConvention):
     cv2.imwrite(file,blank_image)# Getting the current work directory (cwd)
 def createBlankImage(width,height):
     return np.zeros((height,width,3), np.uint8)
-def drawLine(x,y,x1,y1,imgfile,iterations=1):
-        for i in range(iterations):
-                cv2.rectangle(imgfile,(x1,y),(x,y1),222,thickness=19,lineType=5)
-        return imgfile
 def getPDFpages(pdfFile):
     pages = convert_from_path(pdfFile)
     return pages
@@ -398,11 +394,13 @@ def getIndividualSegment(box,left):
             h,w=box.shape
             EndX=int(w*.40)
             box=box[0:h,0:EndX]
+            cv2.imwrite("leftSegment.png",box)
             return box
         else:
             h,w=box.shape
             StartX=int(w*.60)
             box=box[0:h,StartX:w]
+            cv2.imwrite("RightSegmant.png",box)
             return box
 def getSegmantW(img,parts):
             h,w=img.shape
@@ -415,76 +413,111 @@ def getSegmantW(img,parts):
             ##print(img.shape)
             origin=origin[0:h,EndX:w]
             return (img,origin)
-def removeExtraWhiteSpaceTop():
-    files =filterFolder("ConvertedPages")
-    for file in files:
-        file=join("ConvertedPages",file)
-        img=cv2.imread(file,0)
-        blurred = cv2.GaussianBlur(img, (5, 5), 0)
-        ret,thresh = cv2.threshold(blurred,127,255,cv2.THRESH_OTSU)
-        edged = cv2.Canny(thresh, 50, 100)
-        contours,h = cv2.findContours(thresh,1,2)
-        # find contours in the image and initialize the mask that will be
-        # used to remove the bad contours
-        cnts = cv2.findContours(edged.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-        cnts = imutils.grab_contours(cnts)
-        mask = np.ones(edged.shape[:2], dtype="uint8") * 255
-        # loop over the contours
-        xarr=[]
-        yarr=[]
-        for c in cnts:
-            approx = cv2.approxPolyDP(c,0.01*cv2.arcLength(c,True),True)
-            x, y, width, height = cv2.boundingRect(approx)
-            ##print(x,y,file)
-            xarr.append(x)
-            yarr.append(y)
-            # if the contour is bad, draw it on the mask
-            #if is_contour_bad(c):
-        xarr=sorted(xarr)
-        yarr=sorted(i for i in yarr if i>=43)
-        ##print(xarr,"\n",yarr,"\n")    
-        minx=min(xarr)
-        miny=min(yarr)
-        maxx=max(xarr)
-        maxy=max(yarr)
-        img=img[miny:maxy,minx:maxx]
-        # remove the contours from the image and show the resulting images
-        #img= cv2.bitwise_and(img, img, mask=mask)
-        cv2.imwrite(file,img)
+def removeExtraWhiteSpaceTop(img=None):
+    if img is None:
+        files =filterFolder("ConvertedPages")
+        for file in files:
+            file=join("ConvertedPages",file)
+            img=cv2.imread(file,0)
+            blurred = cv2.GaussianBlur(img, (5, 5), 0)
+            ret,thresh = cv2.threshold(blurred,127,255,cv2.THRESH_OTSU)
+            edged = cv2.Canny(thresh, 50, 100)
+            contours,h = cv2.findContours(thresh,1,2)
+            # find contours in the image and initialize the mask that will be
+            # used to remove the bad contours
+            cnts = cv2.findContours(edged.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+            cnts = imutils.grab_contours(cnts)
+            mask = np.ones(edged.shape[:2], dtype="uint8") * 255
+            # loop over the contours
+            xarr=[]
+            yarr=[]
+            for c in cnts:
+                approx = cv2.approxPolyDP(c,0.01*cv2.arcLength(c,True),True)
+                x, y, width, height = cv2.boundingRect(approx)
+                ##print(x,y,file)
+                xarr.append(x)
+                yarr.append(y)
+                # if the contour is bad, draw it on the mask
+                #if is_contour_bad(c):
+            xarr=sorted(xarr)
+            yarr=sorted(i for i in yarr if i>=43)
+            ##print(xarr,"\n",yarr,"\n")    
+            minx=min(xarr)
+            miny=min(yarr)
+            maxx=max(xarr)
+            maxy=max(yarr)
+            img=img[miny:maxy,minx:maxx]
+            # remove the contours from the image and show the resulting images
+            #img= cv2.bitwise_and(img, img, mask=mask)
+            cv2.imwrite(file,img)
+    else:
+            blurred = cv2.GaussianBlur(img, (5, 5), 0)
+            ret,thresh = cv2.threshold(blurred,127,255,cv2.THRESH_OTSU)
+            edged = cv2.Canny(thresh, 50, 100)
+            contours,h = cv2.findContours(thresh,1,2)
+            # find contours in the image and initialize the mask that will be
+            # used to remove the bad contours
+            cnts = cv2.findContours(edged.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+            cnts = imutils.grab_contours(cnts)
+            mask = np.ones(edged.shape[:2], dtype="uint8") * 255
+            # loop over the contours
+            xarr=[]
+            yarr=[]
+            for c in cnts:
+                approx = cv2.approxPolyDP(c,0.01*cv2.arcLength(c,True),True)
+                x, y, width, height = cv2.boundingRect(approx)
+                ##print(x,y,file)
+                xarr.append(x)
+                yarr.append(y)
+                # if the contour is bad, draw it on the mask
+                #if is_contour_bad(c):
+            xarr=sorted(xarr)
+            yarr=sorted(i for i in yarr if i>=43)
+            ##print(xarr,"\n",yarr,"\n")    
+            minx=min(xarr)
+            miny=min(yarr)
+            maxx=max(xarr)
+            maxy=max(yarr)
+            
+            return img
 def getRowQuestion(image,left):
         side=getIndividualSegment(image,left)
+        if left:
+            cv2.imwrite("left.png",side)
+        else:
+            cv2.imwrite("right.png",side)
         blur = cv2.GaussianBlur(side,(5,5),0)
-        ret,thresh=cv2.threshold(blur,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
+        ret,thresh=cv2.threshold(side,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
         #edges=cv2.Canny(thresh,127,200)
-        closing=cv2.morphologyEx(thresh,cv2.MORPH_CLOSE,(3,3),iterations=5)
-        h,w=closing.shape
+        h,w=thresh.shape
         xmin = 31
         ymin=64
         print(w,h)
         w=w-int(w*.04)
-        closing=closing[ymin:h,xmin:w]
-        original=closing
-        h,w=closing.shape
-        innerroYmax=int(h/5)
-        part1=closing[0:innerroYmax,0:w]
-        h,w=part1.shape
-        print(h,h+innerroYmax,w)
-        part2=original[h:h+innerroYmax,0:w]
-        h,w=part2.shape
-        print(h,h+innerroYmax,w)
-        part3=original[h:h+innerroYmax,0:w]
-        h,w=part3.shape
-        print(h,h+innerroYmax,w)
-        part4=original[h:h+innerroYmax,0:w]
-        h,w=part4.shape
-        print(h,h+innerroYmax,w)
-        part5=original[h:h+innerroYmax,0:w]
-        cv2.imwrite("part1Q.png",part1)
-        cv2.imwrite("part2Q.png",part2)
-        cv2.imwrite("part3Q.png",part3)
-        cv2.imwrite("part4Q.png",part4)
-        cv2.imwrite("part5Q.png",part5)
-
+        closing=thresh[ymin:h,xmin:w]
+        box,part5=getSegmant(closing,5)
+        cv2.imwrite("remain5.png",box)
+        cv2.imwrite("part5.png",part5)
+        box,part4=getSegmant(box,4)
+        ##print("box4 shape",part4.shape)
+        cv2.imwrite("remain4.png",box)
+        cv2.imwrite("part4.png",part4)
+        box,part3=getSegmant(box,3)
+        ##print("box3 shape",part3.shape)
+        cv2.imwrite("remain3.png",box)
+        cv2.imwrite("part3.png",part3)
+        box,part2=getSegmant(box,2)
+        ##print("box2 shape",part2.shape)
+        cv2.imwrite("remain2.png",box)
+        cv2.imwrite("part2.png",part2)
+        box,part1=getSegmant(box,1)
+        ##print("box1",part1.shape)
+        #cv2.imwrite("box1.png",box)
+        cv2.imwrite("part1.png",part1)
+        cv2.imwrite("part2.png",part2)
+        cv2.imwrite("part3.png",part3)
+        cv2.imwrite("part4.png",part4)
+        cv2.imwrite("part5.png",part5)
         return [part1,part2,part3,part4,part5] 
 def getCircles(img):
         h,w=img.shape
@@ -506,13 +539,17 @@ def getAnswersForStrip(img):
         circles =getCircles(img)
         ans=[]
         chrs=["A","B","C","D","E"]
-        for i,currentCircle in enumerate(circles):
-                inverted=cv2.bitwise_not(currentCircle)
-        cv2.imwrite("invCircle"+str(i)+".png",inverted)
-        nonZero=cv2.countNonZero(inverted)
-        print("invCircle"+str(i)+".png","Nonzero",nonZero,i)
-        if nonZero <650:
-            ans.append((chrs[i]))
+        index=0
+        for currentCircle in circles:
+                closing=cv2.morphologyEx(currentCircle,cv2.MORPH_CLOSE,(3,3),iterations=5)
+                inverted=cv2.bitwise_not(closing)
+                print(len(inverted))
+                cv2.imwrite("invCircle"+str(index)+".png",inverted)
+                nonZero=cv2.countNonZero(inverted)
+                print("invCircle"+str(index)+".png","Nonzero",nonZero,index)
+                if nonZero <670:
+                    ans.append((chrs[index]))
+                index+=1
         return ans
 def getParts(file):
         file=join("ConvertedPages",file)
@@ -547,6 +584,16 @@ def getParts(file):
         #cv2.imwrite("box1.png",box)
         cv2.imwrite("part1.png",part1)
         return [part1,part2,part3,part4,part5,part6]
+def fixParts(parts):
+    newParts=[]
+    fixed=1
+    for part in parts:
+        curr=removeunwantedLine(removeunwantedLine(part,True))
+        newParts.append(curr)
+        print("fixed",fixed,"\n")
+        cv2.imwrite("fixed"+str(fixed)+".png",curr)
+        fixed+=1
+    return newParts
 def markSheets(file=None):
     files =filterFolder("ConvertedPages")
     answers=[]
@@ -554,6 +601,7 @@ def markSheets(file=None):
     if file is None:
         for file in files:
             Parts=getParts(file)
+            Parts=fixParts(Parts)
             leftQuestionCount=1
             rightQuestionCount=31
             for part in Parts:
@@ -563,24 +611,46 @@ def markSheets(file=None):
                 for question in segmentLeft:
                     ans=getAnswersForStrip(question)
                     answers.append((leftQuestionCount,ans))
+                    print(ans,leftQuestionCount,file)    
                     leftQuestionCount+=1
                 for question in segmentRight:
                     ans =getAnswersForStrip(question)
                     answers.append((rightQuestionCount,ans))
+                    print(ans,rightQuestionCount,file)
                     rightQuestionCount+=1
+            #print(answers)
+           # break
             writeToFile(answers,sheetNumber)
+            sheetNumber+=1
             #sheetNumber+=1
-            break
+            #break
     else:
         Parts=getParts(file)
+        Parts=fixParts(Parts)
+        return
         leftQuestionCount=1
         rightQuestionCount=31
+        index=0
         for part in Parts:
             segmentLeft =getRowQuestion(part,True)
             segmentRight =getRowQuestion(part,False)
             saveStrips(segmentLeft,segmentRight,file)
-            ans=getAnswersForStrip(segmentLeft[0])
-            print(ans)
+            #cv2.imwrite("segL.png",segmentLeft[index])
+            #cv2.imwrite("segW.png",segmentRight[index])
+            for question in segmentLeft:
+                ans=getAnswersForStrip(question)
+                print(ans,"left")
+                answers.append((leftQuestionCount,ans))
+                print(ans,leftQuestionCount,file)
+                leftQuestionCount+=1
+            for question in segmentRight:
+                ans =getAnswersForStrip(question)
+                print(ans,"right")
+                answers.append((rightQuestionCount,ans))
+                print(ans,rightQuestionCount,file)
+                rightQuestionCount+=1
+            index+=1
+        return answers
 def writeToFile(answers,sheet):
     answers=sorted(answers,key=lambda x:x[0])
     file=join("Results","results"+str(sheet)+".csv")
@@ -589,48 +659,87 @@ def writeToFile(answers,sheet):
     if not os.path.exists("Results"):
         os.makedirs("Results")
         csv=open(file,"w")
-        for num in range(1,61):
-            #csv.write(str(num))
-            answerArr.append((num,[]))
     else:
-        csv=open(file,"a")
+        csv=open(file,"w")
         csv.write("\n")
-    for answer in answers:
-        print(answer)
-        index=1
-        for ans in answer[1]:
-            #csv.write(ans)
-            idx=0
-            for answr in answerArr:
-                num,ansarr=answr
-                if num == ans[0]:
-                        ansarr.append(num)
-                        answerArr[index]=(num,ansarr)
-                idx+=1
-    length=len(answers)
+    answers=sorted(answers,key=lambda x:x[1])
+    length=len(answers)-1
     index=0
     for ans in answers:
-        if index <length:
-            qno,alpharr=ans
-            print(qno,alpharr)
-            csv.write(str(qno))
-            for alph in alpharr:
-                csv.write(alph)
-                csv.write(",")
-
+            csv.write(str(ans[0]))
+            csv.write((",").join(ans[1]))
+        
     csv.close()
 def saveStrips(left,right,file):
-    lenght =len(left)
+    lenght =len(right)
     for index in range(lenght):
-        cv2.imwrite(str(index)+"stripleft"+file,left[index])
-        cv2.imwrite(str(index)+"stripRight"+file,right[index])
-
-thisdir = os.getcwd()
-pdFfile =join(thisdir,"MCQ2016.pdf")
-naming="MCQ2016"
-convertPdfToImages(pdFfile,naming,"ConvertedPages")
-rotateFiles(pdFfile,naming)
-getCorners()
-removeExtraWhiteSpaceTop()
-file=join("MCQ20163.png")
-markSheets(file)
+            cv2.imwrite(str(index)+"stripleft"+file,left[index])
+            cv2.imwrite(str(index)+"stripRight"+file,right[index])
+def removeunwantedLine(img,Top=False):
+        if not Top:
+            gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+            kernel_size = 5
+            low_threshold = 50
+            high_threshold = 150
+            blur_gray = cv2.GaussianBlur(gray,(kernel_size, kernel_size),0)
+            edges = cv2.Canny(blur_gray, low_threshold, high_threshold)
+            rho = 1  # distance resolution in pixels of the Hough grid
+            theta = np.pi / 180  # angular resolution in radians of the Hough grid
+            threshold = 15  # minimum number of votes (intersections in Hough grid cell)
+            min_line_length = 50  # minimum number of pixels making up a line
+            max_line_gap = 20  # maximum gap in pixels between connectable line segments
+            line_image = np.copy(img) * 0  # creating a blank to draw lines on
+            lines = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]),
+                    min_line_length, max_line_gap)
+            x=[]
+            y=[]
+            for line in lines:
+                for x1,y1,x2,y2 in line:
+                    cv2.line(line_image,(x1,y1),(x2,y2),(115,0,200),5)
+                    y.append(y1)
+                    y.append(y2)
+            y=sorted(set(y))
+            print(y)
+            h,w,_=img.shape
+            line_image=img[0:y[len(y)-1],0:w]
+            return line_image
+        else:
+            gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+            kernel_size = 5
+            low_threshold = 50
+            high_threshold = 150
+            blur_gray = cv2.GaussianBlur(gray,(kernel_size, kernel_size),0)
+            edges = cv2.Canny(blur_gray, low_threshold, high_threshold)
+            rho = 1  # distance resolution in pixels of the Hough grid
+            theta = np.pi / 180  # angular resolution in radians of the Hough grid
+            threshold = 15  # minimum number of votes (intersections in Hough grid cell)
+            min_line_length = 50  # minimum number of pixels making up a line
+            max_line_gap = 20  # maximum gap in pixels between connectable line segments
+            line_image = np.copy(img) * 0  # creating a blank to draw lines on
+            lines = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]),
+                    min_line_length, max_line_gap)
+            x=[]
+            y=[]
+            for line in lines:
+                for x1,y1,x2,y2 in line:
+                    cv2.line(line_image,(x1,y1),(x2,y2),(115,0,200),5)
+                    y.append(y1)
+                    y.append(y2)
+            y=sorted(set(y))
+            print(y)
+            h,w,_=img.shape
+            line_image=img[0:y[len(y)-1],0:w]
+            return line_image
+#thisdir = os.getcwd()
+#pdFfile =join(thisdir,"MCQ2016.pdf")
+#naming="MCQ2016"
+#convertPdfToImages(pdFfile,naming,"ConvertedPages")
+#rotateFiles(pdFfile,naming)
+#getCorners()
+#removeExtraWhiteSpaceTop()
+file=join("MCQ20162.png")
+#markSheets(file)
+img = cv2.imread('fixed2.png')
+#cv2.imwrite("lfet.png",removeunwantedLine(removeunwantedLine(img,True)))
+cv2.imwrite("attemping.png",removeunwantedLine(removeunwantedLine(img,True)))
+#todo fix  scalling issue remove the upper and lower lines
