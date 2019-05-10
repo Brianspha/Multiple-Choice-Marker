@@ -609,17 +609,10 @@ def markSheets(NegativeMarking=False,file=None):
             file=file.split("\\")[1]
             writeToFile(answers,file,stdNo,False)
 def getTotal(answers,NegativeMarking):
-    correctAnswers=[]
-    negativeMark=0
-    marksoFar=0
-    for i in range(1,61):
-        alphs=["A","B","C","D","E"]
-        correct=randint(1,4)
-        picked=[]
-        for index in range(0,correct):
-            picked.append(alphs[index])
-        correctAnswers.append([i,picked])
-    print("picked",correctAnswers)
+    thisdir = os.getcwd()
+    file=join(thisdir,"answers.csv")
+    ans =open(file)
+    ans=ans.readlines()
     for index in range(len(answers)):
         answer=answers[index]
         correctans=correctAnswers[index]
@@ -639,17 +632,40 @@ def getTotal(answers,NegativeMarking):
 def analytics():
     marks=open(join("Results","marks.csv"))
     marks=marks.readlines()
-    df = pd.DataFrame({'lab':['A', 'B', 'C'], 'val':[10, 30, 20]})
-    ax = df.plot.bar(x='lab', y='val', rot=0)
+    print(marks)
+    marks=marks[1:len(marks)]
+    studentNos = []
+    newMarks=[]
+    for student in marks:
+        newMarks.append(student.split(',')[1])
+        studentNos.append(student.split(',')[0])
+    index = np.arange(len(studentNos))
+    plt.bar(index, newMarks)
+    plt.xlabel('Student', fontsize=10)
+    plt.ylabel('Mark', fontsize=10)
+    plt.xticks(index, studentNos, fontsize=5, rotation=30)
+    plt.title('Results')
+    plt.show()
 def main():
     thisdir = os.getcwd()
-    pdFfile =join(thisdir,"MCQ2016.pdf")
-    naming="MCQ2016"
+    fileName =input('Please enter File name')
+    while(fileName==null):
+        fileName =input('Please enter File name')
+    try:
+            pdFfile =join(thisdir,fileName+".pdf")
+    except expression as identifier:
+        print(fileName,"invalid")
+    negativeMarking=input("Enaable negative marking : Y/N")
+    if negativeMarking =="":
+        negativeMarking=False
+    else:
+        negativeMarking=True
+    naming=fileName
     convertPdfToImages(pdFfile,naming,"ConvertedPages")
     rotateFiles(pdFfile,naming)
     getCorners()
     removeExtraWhiteSpaceTop()
     file=join("MCQ20162.png")
-    markSheets(True,file)
-    #analytics() to complete add abilty to plot graph add sys args add answers sheet option negative enabled
-main()
+    markSheets(negativeMarking)
+ 
+main() #to complete add abilty to plot graph add sys args add answers sheet option negative enabled
