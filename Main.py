@@ -15,7 +15,7 @@ import pandas as pd
 #@param directory directory to which the converted pdf pages are to be stored
 def convertPdfToImages(pdfFile,outputname,directory,rotating=False,toRotate=[]):
     pages = convert_from_path(pdfFile,200)
-    ######print("Opening File: ",pdfFile)
+    #######print("Opening File: ",pdfFile)
     index=1 
     if not os.path.exists(directory):
             os.makedirs(directory)
@@ -28,11 +28,11 @@ def convertPdfToImages(pdfFile,outputname,directory,rotating=False,toRotate=[]):
     else:
             for page in pages:
                 name=outputname+str(index)+".png"
-                ####print(toRotate)
+                #####print(toRotate)
                 newfile=join(directory,name)
                 index+=1
                 if name in toRotate:
-                    ####print("rotating",newfile)
+                    #####print("rotating",newfile)
                     page.save(newfile,'PNG')
                     cv2.imwrite(newfile,rotate_image(newfile,180))
                 else:
@@ -106,14 +106,14 @@ def getCorners():
             criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 0.001)
             corners = cv2.cornerSubPix(dialted,np.float32(centroids),(5,5),(-1,-1),criteria)
             blank=createBlankImage(erode.shape[1],erode.shape[0])
-            ####print("cont len",len(corners),file)
+            #####print("cont len",len(corners),file)
             x=[]
             y=[]
             #sorted(corners)
             for corner in corners:
                     x.append(corner[0])
                     y.append(corner[1])
-                    ###print(corner)
+                    ####print(corner)
             x=sorted(x)
             y=sorted(y)
             x=np.array(x).astype(int)
@@ -128,8 +128,8 @@ def getCorners():
                 yMin=170
             if yMax >=1590 and yMax< 1640:
                 yMax=1605
-            ####print(corners)
-            ##print(xMin,yMin,xMax,yMax,file)
+            #####print(corners)
+            ###print(xMin,yMin,xMax,yMax,file)
             blank=gray[yMin:yMax,xMin:xMax]
             #blank=cv2.Canny(blank,127,200)
             cv2.imwrite(file,blank)
@@ -138,7 +138,7 @@ def haveToRotate(file):
         imgFile =cv2.imread(file,0)
         template = cv2.imread(join("templates",'g.png'),0)
         w, h = template.shape[::-1]
-        #print(w,h)
+        ##print(w,h)
         res = cv2.matchTemplate(imgFile,template,cv2.TM_CCOEFF_NORMED)
         threshold = 0.8
         loc = np.where( res >= threshold)
@@ -161,15 +161,15 @@ def rotateFiles(pdfFile,namingConvention):
         if rotate:
             if file.split("\\")[1] not in toRotate:
                 toRotate.append(file.split("\\")[1])
-    ###print(toRotate)
+    ####print(toRotate)
     convertPdfToImages(pdfFile,namingConvention,"ConvertedPages",True,toRotate)
 def getInnerRec(file):
         imgfile =cv2.imread(file,0)
         #imgGray=cv2.cvtColor(imgfile,cv2.COLOR_BGR2GRAY)
         #imgfile=getInnerRec(imgfile)
-        #print(imgfile.shape)
+        ##print(imgfile.shape)
         h,w=imgfile.shape
-        ####print(h,w)
+        #####print(h,w)
         startX=int(w*.4)
         startY=int(h*.004)
         EndX=int(w-w*.10)
@@ -198,14 +198,14 @@ def removeExtraWhiteSpaceTop(img=None):
             for c in cnts:
                 approx = cv2.approxPolyDP(c,0.01*cv2.arcLength(c,True),True)
                 x, y, width, height = cv2.boundingRect(approx)
-                ###print(x,y,file)
+                ####print(x,y,file)
                 xarr.append(x)
                 yarr.append(y)
                 # if the contour is bad, draw it on the mask
                 #if is_contour_bad(c):
             xarr=sorted(xarr)
             yarr=sorted(i for i in yarr if i>=43)
-            ###print(xarr,"\n",yarr,"\n")    
+            ####print(xarr,"\n",yarr,"\n")    
             minx=min(xarr)
             miny=min(yarr)-5
             maxx=max(xarr)
@@ -230,14 +230,14 @@ def removeExtraWhiteSpaceTop(img=None):
             for c in cnts:
                 approx = cv2.approxPolyDP(c,0.01*cv2.arcLength(c,True),True)
                 x, y, width, height = cv2.boundingRect(approx)
-                ###print(x,y,file)
+                ####print(x,y,file)
                 xarr.append(x)
                 yarr.append(y)
                 # if the contour is bad, draw it on the mask
                 #if is_contour_bad(c):
             xarr=sorted(xarr)
             yarr=sorted(i for i in yarr if i>=43)
-            ###print(xarr,"\n",yarr,"\n")    
+            ####print(xarr,"\n",yarr,"\n")    
             minx=min(xarr)
             miny=min(yarr)
             maxx=max(xarr)
@@ -245,7 +245,7 @@ def removeExtraWhiteSpaceTop(img=None):
             
             return img
 def getCircles(img):
-        #print("img",img.shape)
+        ##print("img",img.shape)
         h,w=img.shape
         maxX=30
         circle1=img[0:h,0:maxX]
@@ -268,15 +268,15 @@ def getAnswersForStrip(img):
                 ret,thresh=cv2.threshold(currentCircle,350,255,cv2.THRESH_OTSU+cv2.THRESH_BINARY)
                 closing=cv2.morphologyEx(thresh,cv2.MORPH_CLOSE,(6,6),iterations=5)
                 inverted=cv2.bitwise_not(closing)
-                ##print(len(inverted))
+                ###print(len(inverted))
                #cv2.imwrite("invCircle"+str(index)+".png",inverted)
                 nonZero=cv2.countNonZero(inverted)
-                print(nonZero,index)
+                #print(nonZero,index)
                 if nonZero >=300:
                     ans.append((chrs[index]))
                 index+=1
         return ans
-def writeToFile(answers,sheet,stdNo,rejected,isNegativeMarking=False):
+def writeToFile(answers,sheet,stdNo,rejected,answersFile=None,isNegativeMarking=False):
     index=0
     if rejected:
         if not os.path.exists("Results"):
@@ -287,9 +287,9 @@ def writeToFile(answers,sheet,stdNo,rejected,isNegativeMarking=False):
                 csv.write(str(ans))
                 csv.write(",")
         return
-    print("before","\n",answers)
+    #print("before","\n",answers)
     answers=sorted(answers,key=lambda x:x[0])
-    print("After","\n",answers)
+    #print("After","\n",answers)
     file=join("Results","results"+str(sheet)+".csv")
     answerArr=[]
     if not os.path.exists("Results"):
@@ -302,7 +302,7 @@ def writeToFile(answers,sheet,stdNo,rejected,isNegativeMarking=False):
     for ans in answers:
 #            if index < len(answers)-1:
                 csv.write(str(ans))
-    total=getTotal(answers,isNegativeMarking)
+    total=getTotal(answers,isNegativeMarking,answersFile)
     csv.write("Total: "+str(total))
     marks=join("Results","marks.csv")
     if not os.path.isfile(marks):
@@ -324,7 +324,7 @@ def getstudentNumberStrips(file):
         img=cv2.imread(file,0)
         template = cv2.imread(join("templates",'g.png'),0)
         w, h = template.shape[::-1]
-        print(w,h)
+        #print(w,h)
         res = cv2.matchTemplate(img,template,cv2.TM_CCOEFF_NORMED)
         threshold = 0.8
         loc = np.where( res >= threshold)
@@ -339,7 +339,7 @@ def getstudentNumberStrips(file):
         minX=min(sorted(set(x)))
         maxX=int(w*.30)
         maxY=int(h*.87)
-        #print("minX",minX,"maxY",maxY,"maxX",maxX,x,y,w,h)
+        ##print("minX",minX,"maxY",maxY,"maxX",maxX,x,y,w,h)
         img=img[minY:maxY,minX:maxX]
        # cv2.imwrite("matchedG.png",img)
         #student number part end
@@ -391,7 +391,7 @@ def processCircle(cirlces):
                 closing=cv2.morphologyEx(thresh,cv2.MORPH_CLOSE,(6,6),iterations=5)
                 inverted=cv2.bitwise_not(closing)
                 nonBlack=cv2.findNonZero(inverted)
-                #print(len(nonBlack),"lenNonBlack <10")
+                ##print(len(nonBlack),"lenNonBlack <10")
                 #cv2.imwrite("CurrentCircle.png",circle)
                 if len(nonBlack)>500:
                      break
@@ -403,7 +403,7 @@ def processCircle(cirlces):
             closing=cv2.morphologyEx(thresh,cv2.MORPH_CLOSE,(6,6),iterations=5)
             inverted=cv2.bitwise_not(closing)
             nonBlack=cv2.findNonZero(inverted)
-            #print(len(nonBlack),"lenNonBlack")
+            ##print(len(nonBlack),"lenNonBlack")
             if len(nonBlack)>500:
                 index=alphs[index]
                 break
@@ -429,7 +429,7 @@ def get12PartsforSheet(file):
         side=getInnerRec(file)
         template = cv2.imread(join("templates",'abc.png'),0)
         w, h = template.shape[::-1]
-        #print(w,h)
+        ##print(w,h)
         res = cv2.matchTemplate(side,template,cv2.TM_CCOEFF_NORMED)
         threshold = 0.8
         loc = np.where( res >= threshold)
@@ -447,9 +447,9 @@ def get12PartsforSheet(file):
         y=getlessThan(y)
         x=sorted(set(x))
         x=getlessThan(x)
-        print(x)
-        print("\n")
-        print(y)
+        #print(x)
+        #print("\n")
+        #print(y)
         minX=min(x[0])
         minY=min(y[0])
         maxX=max(x[1])
@@ -518,7 +518,7 @@ def get12PartsforSheet(file):
         return [part1,part2,part3,part4,part5,part6,part7,part8,part9,part10,part11,part12],False
 def getSegmnantAnswerStrips(side):
         h,w=side.shape
-        #print(y,"Y")
+        ##print(y,"Y")
         #cv2.imwrite("matched1.png",side)
         h,w=side.shape
         maxY=34
@@ -559,37 +559,33 @@ def getStudentNumber(file):
                 stdNo+=str(val)
         count+=1
     return stdNo
-def markSheets(NegativeMarking=False,file=None):
+def markSheets(file,answersFile,NegativeMarking=False):
     files =filterFolder("ConvertedPages")
     answers=[]
     sheetNumber=1
     count=1
     leftQuestionCount=1
     rightQuestionCount=31
-    if file is None:
+    if file:
         for file in files:
             stdNo=getStudentNumber(file)
             file=join("ConvertedPages",file)
             Parts,rejected=get12PartsforSheet(file)
+            answers=[]
             if rejected:
                 writeToFile(answers,sheetNumber,stdNo,rejected)
                 continue
             else:   
+                leftTurn=True
+                qCount=1
                 for part in Parts:
                     parts=getSegmnantAnswerStrips(part)
-                    whichPart=1
-                    qCount=1
-                    for part in Parts:
-                        parts=getSegmnantAnswerStrips(part)
-                        for strip in parts:
-                            ans=getAnswersForStrip(strip)
-                            answers.append([qCount,ans])  
-                            qCount+=1          
-                    writeToFile(answers,file.split("\\")[1],stdNo,False)
-                answers=[]
-                leftQuestionCount=1
-                rightQuestionCount=31
-                count=1
+                    for strip in parts:
+                        ans=getAnswersForStrip(strip)
+                        answers.append([qCount,ans])  
+                        qCount+=1
+                file=file.split("\\")[1]
+                writeToFile(answers,file,stdNo,False,answersFile,NegativeMarking)
     else:
         stdNo=getStudentNumber(file)
         file=join("ConvertedPages",file)
@@ -607,20 +603,21 @@ def markSheets(NegativeMarking=False,file=None):
                     answers.append([qCount,ans])  
                     qCount+=1
             file=file.split("\\")[1]
-            writeToFile(answers,file,stdNo,False)
-def getTotal(answers,NegativeMarking):
+            writeToFile(answers,file,stdNo,False,answersFile,NegativeMarking)
+def getTotal(answers,NegativeMarking,answersFile):
     thisdir = os.getcwd()
-    file=join(thisdir,"answers.csv")
+    file=join(thisdir,answersFile)
     ans =open(file)
-    ans=ans.readlines()
+    ans=ans.readlines()[0].split('--')
+    marksoFar=0
+    negativeMark=0
     for index in range(len(answers)):
-        answer=answers[index]
-        correctans=correctAnswers[index]
-        studentAns=answer[1]
-        correctAns=correctans[1]
+        studentAns=ans[index]
+        correctans=answers[index]
         found=False
-        for ans in studentAns:
-            if ans in correctAns:
+        correctans=correctans[1]
+        for answr in correctans:
+            if answr in studentAns:
                 marksoFar+=1
                 found=True
             else:
@@ -630,42 +627,73 @@ def getTotal(answers,NegativeMarking):
         marksoFar-=negativeMark
     return marksoFar
 def analytics():
-    marks=open(join("Results","marks.csv"))
-    marks=marks.readlines()
-    print(marks)
-    marks=marks[1:len(marks)]
-    studentNos = []
-    newMarks=[]
-    for student in marks:
-        newMarks.append(student.split(',')[1])
-        studentNos.append(student.split(',')[0])
-    index = np.arange(len(studentNos))
-    plt.bar(index, newMarks)
-    plt.xlabel('Student', fontsize=10)
-    plt.ylabel('Mark', fontsize=10)
-    plt.xticks(index, studentNos, fontsize=5, rotation=30)
-    plt.title('Results')
-    plt.show()
+    if not os.path.isfile(join("Results","marks.csv")):
+        raise Exception("No sheets were marked")
+    else:
+        marks=open(join("Results","marks.csv"))
+        marks=marks.readlines()
+        #print(marks)
+        marks=marks[1:len(marks)]
+        studentNos = []
+        newMarks=[]
+        for student in marks:
+            newMarks.append(student.split(',')[1])
+            studentNos.append(student.split(',')[0])
+        updateMarks=[]
+        for num in newMarks:
+            if int(num) <=0:
+                updateMarks.append(0)
+            else:
+                updateMarks.append(int(num))
+        index = np.arange(len(studentNos))
+        plt.bar(index, updateMarks)
+        plt.xlabel('Student', fontsize=10)
+        plt.ylabel('Mark', fontsize=10)
+        plt.xticks(index, studentNos, fontsize=5, rotation=30)
+        plt.title('Results out of 60 marks')
+        plt.show()
 def main():
     thisdir = os.getcwd()
-    fileName =input('Please enter File name')
-    while(fileName==null):
-        fileName =input('Please enter File name')
+    fileName =input('Please enter File name\n')
+    pdFfile=""
+    while(not fileName):
+        fileName =input('Please enter File name\n')
     try:
-            pdFfile =join(thisdir,fileName+".pdf")
-    except expression as identifier:
-        print(fileName,"invalid")
-    negativeMarking=input("Enaable negative marking : Y/N")
-    if negativeMarking =="":
-        negativeMarking=False
-    else:
-        negativeMarking=True
-    naming=fileName
-    convertPdfToImages(pdFfile,naming,"ConvertedPages")
-    rotateFiles(pdFfile,naming)
-    getCorners()
-    removeExtraWhiteSpaceTop()
-    file=join("MCQ20162.png")
-    markSheets(negativeMarking)
+        pdFfile =join(thisdir,fileName)
+        ##print(os.path.isfile(join(thisdir,pdFfile)))
+        if not os.path.isfile(join(thisdir,pdFfile)):
+                 raise Exception("")
+        else:
+            try:
+                answers=input("Enter answers File name: \n")
+                while not answers:
+                    answers=input("Enter answers File name: \n")
+                answers=join(thisdir,answers)
+               # #print(answers)
+                #print(os.path.isfile(answers))
+                if not os.path.isfile(answers):
+                #    #print("Hello")
+                    raise Exception("")
+                else:
+                    negativeMarking=input("Enable negative marking : Y/N \n")
+                    if not negativeMarking :
+                            negativeMarking=False
+                    else:
+                        negativeMarking=True
+                    naming=fileName
+                    #print("PDF file "+pdFfile)
+                    #pages = convert_from_path(pdFfile,200)
+                    convertPdfToImages(pdFfile,naming,"ConvertedPages")
+                    rotateFiles(pdFfile,naming)
+                    getCorners()
+                    removeExtraWhiteSpaceTop()
+                    markSheets(pdFfile,answers,negativeMarking)
+                    analytics()
+            except Exception as error:
+                    print(answers +" does not exist")
+
+    except:
+            print(fileName," invalid file or file does not exist")
+
  
 main() #to complete add abilty to plot graph add sys args add answers sheet option negative enabled
